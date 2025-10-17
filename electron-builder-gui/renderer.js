@@ -47,14 +47,12 @@ const TEMPLATES = {
     }
 };
 
-// === НОВЫЕ ЭЛЕМЕНТЫ DOM ===
+// ЭЛЕМЕНТЫ DOM
 const mainMenu = document.getElementById('mainMenu');
 const mainInterface = document.getElementById('mainInterface');
 const backBtn = document.getElementById('backBtn');
 const openExistingBtn = document.getElementById('openExistingBtn');
 const createNewBtn = document.getElementById('createNewBtn');
-
-// === СТАРЫЕ ЭЛЕМЕНТЫ ===
 const projectPathEl = document.getElementById('projectPath');
 const configSection = document.getElementById('configSection');
 const jsonEditor = document.getElementById('jsonEditor');
@@ -62,9 +60,7 @@ const logSectionContainer = document.getElementById('logSection');
 const buildLogEl = document.getElementById('buildLog');
 const openDistBtn = document.getElementById('openDist');
 
-// =======================
 // Модальное окно
-// =======================
 function showModal(title, message, buttons = [{ text: "ОК" }]) {
     const overlay = document.getElementById('modalOverlay');
     const modalTitle = document.getElementById('modalTitle');
@@ -88,13 +84,10 @@ function showModal(title, message, buttons = [{ text: "ОК" }]) {
     overlay.classList.add('active');
 }
 
-// =======================
 // Навигация
-// =======================
 function showMainMenu() {
     mainMenu.classList.add('active');
     mainInterface.classList.remove('active');
-    // Сброс состояния
     currentProjectPath = null;
     currentPkg = {};
     projectPathEl.classList.add('hidden');
@@ -112,9 +105,7 @@ function showProjectInterface() {
 // Инициализация
 showMainMenu();
 
-// =======================
 // Обработчики главного меню
-// =======================
 openExistingBtn.addEventListener('click', async () => {
     const folder = await window.api.selectFolder();
     if (folder) {
@@ -191,10 +182,7 @@ backBtn.addEventListener('click', () => {
     showMainMenu();
 });
 
-
-// =======================
 // Загрузка и отображение package.json
-// =======================
 async function loadPackage() {
     const pkg = await window.api.readPackage(currentProjectPath);
     currentPkg = pkg || {};
@@ -211,8 +199,7 @@ async function loadPackage() {
     winLabel.style.display = '';
     macLabel.style.display = '';
     linuxLabel.style.display = '';
-
-    // Потом скрываем нужные
+    
     if (currentOS === 'win32' || currentOS === 'linux') {
         macLabel.style.display = 'none';
     } else if (currentOS === 'linux') {
@@ -235,9 +222,7 @@ function updateJsonEditor() {
     document.getElementById('jsonOutput').innerHTML = highlighted;
 }
 
-// =======================
 // Применение шаблона
-// =======================
 document.getElementById('applyTemplate').addEventListener('click', () => {
     const templateKey = document.getElementById('template').value;
     const template = TEMPLATES[templateKey];
@@ -249,9 +234,7 @@ document.getElementById('applyTemplate').addEventListener('click', () => {
     updateJsonEditor();
 });
 
-// =======================
 // Сохранение
-// =======================
 document.getElementById('saveBtn').addEventListener('click', async () => {
     currentPkg.productName = document.getElementById('productName').value;
     currentPkg.version = document.getElementById('version').value;
@@ -264,9 +247,7 @@ document.getElementById('saveBtn').addEventListener('click', async () => {
     updateJsonEditor();
 });
 
-// =======================
 // Выбор иконки
-// =======================
 document.getElementById('selectIcon').addEventListener('click', async () => {
     const result = await window.api.selectFile([
         { name: 'Images', extensions: ['png', 'ico', 'icns'] }
@@ -280,9 +261,8 @@ document.getElementById('selectIcon').addEventListener('click', async () => {
     }
 });
 
-// =======================
+
 // Экспорт профиля
-// =======================
 document.getElementById('exportProfile').addEventListener('click', () => {
     const dataStr = JSON.stringify({ pkg: currentPkg }, null, 2);
     const dataBlob = new Blob([dataStr], { type: 'application/json' });
@@ -298,9 +278,7 @@ document.getElementById('exportProfile').addEventListener('click', () => {
     showModal("📤 Экспорт", "Профиль успешно экспортирован!");
 });
 
-// =======================
 // Импорт профиля
-// =======================
 document.getElementById('importProfile').addEventListener('click', () => {
     const input = document.createElement('input');
     input.type = 'file';
@@ -326,9 +304,7 @@ document.getElementById('importProfile').addEventListener('click', () => {
     input.click();
 });
 
-// =======================
 // Проверка и установка electron-builder
-// =======================
 document.getElementById('checkBtn').addEventListener('click', async () => {
     const hasBuilder = await window.api.checkElectronBuilder(currentProjectPath);
     if (!hasBuilder) {
@@ -355,9 +331,7 @@ document.getElementById('checkBtn').addEventListener('click', async () => {
     }
 });
 
-// =======================
 // Сборка
-// =======================
 document.getElementById('buildBtn').addEventListener('click', async () => {
     const platforms = [];
     if (document.getElementById('win').checked) platforms.push('win');
@@ -369,19 +343,19 @@ document.getElementById('buildBtn').addEventListener('click', async () => {
         return;
     }
 
-    // 1. Убедиться, что electron-builder установлен
+    // 1. electron-builder установлен
     const hasBuilder = await window.api.checkElectronBuilder(currentProjectPath);
     if (!hasBuilder) {
         await window.api.installElectronBuilder(currentProjectPath);
     }
 
-    // 2. Убедиться, что electron есть в devDependencies
+    // 2. electron есть в devDependencies
     const electronAdded = await window.api.ensureElectronInDevDeps(currentProjectPath);
     if (electronAdded) {
         showModal("🔧 Настройка", "Добавлен electron в devDependencies...");
     }
 
-    // 3. Установить ВСЕ зависимости (включая electron и electron-builder)
+    // 3. Установить зависимости
     const hasElectron = await window.api.checkElectronInstalled(currentProjectPath);
     if (!hasElectron) {
         showModal("📦 Установка", "Устанавливаются зависимости проекта...");
@@ -412,9 +386,8 @@ document.getElementById('buildBtn').addEventListener('click', async () => {
     await window.api.buildProject(currentProjectPath, platforms);
 });
 
-// =======================
 // Открыть dist
-// =======================
 openDistBtn.addEventListener('click', () => {
     window.api.openFolder(currentProjectPath + '/dist');
 });
+
