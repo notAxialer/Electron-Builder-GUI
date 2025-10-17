@@ -22,7 +22,7 @@ function createWindow() {
 
 app.whenReady().then(createWindow);
 
-// --- Вспомогательная функция: валидация и исправление package.json ---
+// --- Валидация и исправление package.json ---
 function validateAndFixPackageJson(pkg) {
     const fixes = [];
 
@@ -43,7 +43,7 @@ function validateAndFixPackageJson(pkg) {
         fixes.push('добавлено поле description');
     }
 
-    // 3. Убеждаемся, что есть main
+    // 3. Проверка наличия main
     if (!pkg.main) {
         pkg.main = 'main.js';
         fixes.push('установлена точка входа: main.js');
@@ -66,7 +66,6 @@ ipcMain.handle('get-platform', () => {
     return platform;
 });
 
-// Убедиться, что зависимости установлены
 ipcMain.handle('install-project-dependencies', async (e, projectPath) => {
     return new Promise((resolve, reject) => {
         const child = spawn('npm', ['install'], {
@@ -81,7 +80,7 @@ ipcMain.handle('install-project-dependencies', async (e, projectPath) => {
     });
 });
 
-// Проверка: есть ли electron в node_modules?
+// Проверка: есть ли electron в node_modules
 ipcMain.handle('check-electron-installed', async (e, projectPath) => {
     return fs.existsSync(path.join(projectPath, 'node_modules', 'electron'));
 });
@@ -100,7 +99,6 @@ ipcMain.handle('read-package', async (e, projectPath) => {
     const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
     const { pkg: fixedPkg, fixes } = validateAndFixPackageJson(pkg);
     if (fixes.length > 0) {
-        // Автоматически сохраняем исправленную версию
         fs.writeFileSync(pkgPath, JSON.stringify(fixedPkg, null, 2));
     }
     return fixedPkg;
@@ -113,7 +111,7 @@ ipcMain.handle('save-package', async (e, projectPath, pkg) => {
     return true;
 });
 
-// Убедиться, что electron есть в devDependencies
+// Проверка devDependencies
 ipcMain.handle('ensure-electron-in-devdeps', async (e, projectPath) => {
     const pkgPath = path.join(projectPath, 'package.json');
     if (!fs.existsSync(pkgPath)) {
@@ -123,7 +121,6 @@ ipcMain.handle('ensure-electron-in-devdeps', async (e, projectPath) => {
     const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
     let wasModified = false;
   
-    // Если electron в dependencies — переносим в devDependencies
     if (pkg.dependencies?.electron) {
       pkg.devDependencies = pkg.devDependencies || {};
       pkg.devDependencies.electron = pkg.dependencies.electron;
@@ -134,10 +131,9 @@ ipcMain.handle('ensure-electron-in-devdeps', async (e, projectPath) => {
       wasModified = true;
     }
   
-    // Если electron вообще отсутствует — добавляем
     if (!pkg.devDependencies?.electron) {
       pkg.devDependencies = pkg.devDependencies || {};
-      pkg.devDependencies.electron = '^30.0.0'; // или используй последнюю
+      pkg.devDependencies.electron = '^30.0.0';
       wasModified = true;
     }
   
@@ -208,7 +204,6 @@ ipcMain.handle('open-folder', (e, folderPath) => {
     shell.openPath(folderPath);
 });
 
-// Новый IPC: получить относительный путь (для иконки)
 ipcMain.handle('make-relative-path', (e, basePath, fullPath) => {
     return path.relative(basePath, fullPath);
 });
@@ -303,4 +298,5 @@ ipcMain.handle('create-electron-project', async (e, baseDir, projectName) => {
       });
       child.on('error', reject);
     });
+
   });
